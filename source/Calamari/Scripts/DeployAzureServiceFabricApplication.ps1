@@ -94,6 +94,8 @@ function Read-PublishProfile {
 
     $publishProfileFolder = (Split-Path $PublishProfileFile)
     $publishProfile.ApplicationParameterFile = [System.IO.Path]::Combine($PublishProfileFolder, $publishProfileXml.PublishProfile.ApplicationParameterFile.Path)
+    $publishProfile.StartupServiceParameterFile = [System.IO.Path]::Combine($PublishProfileFolder, $publishProfileXml.PublishProfile.StartupServiceParameterFile.Path)
+    $publishProfile.StartupServicesFilePath = [System.IO.Path]::Combine($PublishProfileFolder, '../StartupServices.xml')
 
     return $publishProfile
 }
@@ -165,6 +167,11 @@ if (-not $AppTypeAndVersionExists) {
 # Perform an upgrade if upgrades are enabled, the app type and name exists, but the new version does not exist,
 # or if an upgrade was forced and the app type and name exists
 if ($AppTypeAndNameExists -and ($UpgradeEnabled -and -not $AppTypeAndNameAndVersionExists -or $ForceUpgrade)) {
+    if (-not [string]::IsNullOrEmpty($publishProfile.StartupServicesFilePath))
+    {
+        $parameters.StartupServicesFileMode = $true
+    }
+
     if ($DeployOnly) {
         $parameters.Action = "Register"
     }
@@ -196,6 +203,12 @@ if ($AppTypeAndNameExists -and ($UpgradeEnabled -and -not $AppTypeAndNameAndVers
 }
 # Otherwise we are registering or creating the app
 else {
+    $parameters.StartupServicesFilePath = $publishProfile.StartupServicesFilePath
+    if (-not [string]::IsNullOrEmpty($publishProfile.StartupServiceParameterFile))
+    {
+        $parameters.StartupServiceParameterFilePath = $publishProfile.StartupServiceParameterFile
+    }
+
     if ($DeployOnly) {
         $parameters.Action = "Register"
     }
